@@ -1,5 +1,6 @@
 from node_edge_classes import Graph
 from collections import deque
+import copy
 
 def get_neighbours(graph, vertex):
     neighbours = [edge.vertex for edge in graph.adj_list[vertex]]
@@ -33,6 +34,7 @@ def check_distance_bfs(graph, radius):
 
 
 def main():
+
     g = Graph()
 
     while True:
@@ -74,18 +76,26 @@ def main():
                     continue
 
                 try:
-                    cost, start_time, end_time, capacity = map(int, input("cots, Start Time, End Time, Capacity: ").split())
+                    cost, start_time, end_time, capacity = map(int, input("cost, Start Time, End Time, Capacity: ").split())
                 except ValueError:
                     print("\nINVALID !, Should Enter 4 Number")
                     continue
+                if g.current_size < 5:
+                    g.add_edge(src, dest, cost, capacity, start_time, end_time)
+                    print(f"\nThe Edge {src} <--> {dest} added.")
 
-                g.add_edge(src, dest, cost, capacity, start_time, end_time)
+                else:
+                    temp_graph = copy.deepcopy(g)
+                    temp_graph.add_edge(src, dest, cost, capacity, start_time, end_time)
 
-                print(f"\nThe Edge {src} -> {dest} added.")
+                    if check_distance_bfs(temp_graph, 3):
+                        g.add_edge(src, dest, cost, capacity, start_time, end_time)
+                        print(f"\nThe Edge {src} <--> {dest} added.")
+                    else:
+                        print("\nThe Edge Can not be Added, (RADIUS LIMIT)")
 
             except ValueError:
                 print("\nInvalid input! Please enter numbers only.")
-
 
         elif command == '3':
             g.print_graph()
