@@ -7,12 +7,11 @@ def main():
         print("\n[0]: Exit"
               "\n[1]: Add Vertex"
               "\n[2]: Add Edge"
-              "\n[3]: Display Vertices"
-              "\n[4]: Print"
-              "\n[5]: Shortest Path"
-              "\n[6]: Display Graph")
+              "\n[3]: Print"
+              "\n[4]: Shortest Path"
+              "\n[5]: Display Graph")
 
-        command = input("Enter command: ")
+        command = input("--> ")
 
         if command == '0':
             break
@@ -27,13 +26,14 @@ def main():
 
             try:
                 src = int(input("\nSource vertex: "))
-                dest = int(input("Destination vertex: "))
 
-                if src >= g.current_size:
+                if src not in g.adj_list:
                     print("\nSource Vertex does not exist !!!")
                     continue
 
-                if dest >= g.current_size:
+                dest = int(input("Destination vertex: "))
+
+                if dest not in g.adj_list:
                     print("\nDestination Vertex does not exist !!!")
                     continue
 
@@ -41,25 +41,27 @@ def main():
                     print("Self-loop !!")
                     continue
 
-                cost = int(input("\nCost: "))
-                start_time = int(input("Start Time: "))
-                end_time = int(input("End Time: "))
-                capacity = int(input("Capacity: "))
+                try:
+                    cost, start_time, end_time, capacity = map(int, input("cots, Start Time, End Time, Capacity: ").split())
+                except ValueError:
+                    print("\nINVALID !, Should Enter 4 Number")
+                    continue
 
                 g.add_edge(src, dest, cost, capacity, start_time, end_time)
 
+                print(f"\nThe Edge {src} -> {dest} added.")
+
             except ValueError:
-                print("Invalid input! Please enter numbers only.")
+                print("\nInvalid input! Please enter numbers only.")
+
 
         elif command == '3':
-            g.display_vertices()
-
-        elif command == '4':
             g.print_graph()
 
-        elif command == '5':
+
+        elif command == '4':
             if g.current_size < 2:
-                print("Add Vertex first!")
+                print("\nAdd Vertex first!")
                 continue
             try:
                 src = int(input("Source vertex: "))
@@ -68,8 +70,10 @@ def main():
             except ValueError:
                 print("Invalid input.")
 
-        elif command == '6':
+
+        elif command == '5':
             g.display_graph()
+
 
         else:
             print("\nInvalid choice!")

@@ -26,15 +26,7 @@ class Graph:
         self.current_size += 1
 
     def add_edge(self, u, v, cost, capacity, start_time, end_time):
-        if u >= self.current_size or v >= self.current_size:
-            print("\nVertex does not exist !!!")
-            return
 
-        if u == v:
-            print("Self-loop !!")
-            return
-
-        # حذف یال قبلی در صورت وجود
         self.adj_list[u] = [edge for edge in self.adj_list[u] if edge.vertex != v]
         self.adj_list[v] = [edge for edge in self.adj_list[v] if edge.vertex != u]
 
@@ -42,9 +34,7 @@ class Graph:
         self.adj_list[v].append(Node(u, cost, capacity, start_time, end_time))
 
         self.G.add_edge(f"{u}", f"{v}")
-        # self.G.add_edge(f"{v}", f"{u}")
 
-        print(f"\nEdge added between {u} and {v}.")
 
     def display_vertices(self):
         if self.current_size == 0:
@@ -54,15 +44,24 @@ class Graph:
         for i in range(self.current_size):
             print(f"Vertex: {i}")
 
+
     def print_graph(self):
         if self.current_size == 0:
             print("\nEMPTY\n")
             return
+
         for u in range(self.current_size):
+            i = 0
             print(f"V{u} :", end=" ")
+
             for edge in self.adj_list[u]:
-                print(edge, end=" -> ")
-            print("None")
+                if i == len(self.adj_list[u]) -1 :
+                    print(edge, end=" ")
+                else:
+                    print(edge, end=" -> ")
+                i += 1
+
+            print("")
 
     def shortest_path(self, src, dest):
         print(f"Shortest path from {src} to {dest} not implemented yet.")
@@ -71,6 +70,7 @@ class Graph:
         if self.current_size == 0:
             print("\nEMPTY\n")
             return
+
         nx.draw(self.G, with_labels=True, node_color='skyblue', node_size=1500, font_size=16)
         plt.title("Simple Triangle Graph")
         plt.show()
