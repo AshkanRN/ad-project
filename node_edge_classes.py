@@ -74,3 +74,5 @@ class Graph:
         nx.draw(self.G, with_labels=True, node_color='skyblue', node_size=1500, font_size=16)
         plt.title("Simple Triangle Graph")
         plt.show()
+
+

@@ -1,4 +1,36 @@
 from node_edge_classes import Graph
+from collections import deque
+
+def get_neighbours(graph, vertex):
+    neighbours = [edge.vertex for edge in graph.adj_list[vertex]]
+    return neighbours
+
+
+def check_distance_bfs(graph, radius):
+    for start in range(graph.current_size):
+        visited = [False] * graph.current_size
+        distance = [-1] * graph.current_size
+        queue = deque()
+
+        visited[start] = True
+        distance[start] = 0
+        queue.append(start)
+
+        while queue:
+            u = queue.popleft()
+            for neighbour in get_neighbours(graph, u):
+                if not visited[neighbour]:
+                    visited[neighbour] = True
+                    distance[neighbour] = distance[u] + 1
+
+                    if distance[neighbour] > radius:
+                        return False
+
+                    queue.append(neighbour)
+
+    return True
+
+
 
 def main():
     g = Graph()
@@ -74,6 +106,12 @@ def main():
         elif command == '5':
             g.display_graph()
 
+        elif command == '6':
+            x = int(input("enter a vertex: "))
+            if x in g.adj_list:
+                print(get_neighbours(g,x))
+            else:
+                print("the vertex does not exists")
 
         else:
             print("\nInvalid choice!")
