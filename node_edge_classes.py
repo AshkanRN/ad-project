@@ -25,7 +25,7 @@ class Graph:
     def add_vertex(self):
         self.adj_list[self.current_size] = []
         print(f"\nVertex {self.current_size} Created.")
-        self.G.add_node(f"{self.current_size}")
+        self.G.add_node(self.current_size)
         self.current_size += 1
 
     def add_edge(self, u, v, cost, capacity, start_time, end_time):
@@ -36,7 +36,7 @@ class Graph:
         self.adj_list[u].append(Node(v, cost, capacity, start_time, end_time))
         self.adj_list[v].append(Node(u, cost, capacity, start_time, end_time))
 
-        self.G.add_edge(f"{u}", f"{v}", weight = cost, capacity = capacity,
+        self.G.add_edge(u, v, weight = cost, capacity = capacity,
                         start_time = start_time, end_time = end_time)
 
 
@@ -166,8 +166,63 @@ class Graph:
         self.display_mst_edges(mst_edges)
 
 
-    def shortest_path(self, src, dest):
-        print(f"Shortest path from {src} to {dest} not implemented yet.")
+    def shortest_path(self, src, dest=None):
+        if src not in self.adj_list:
+            print("\nsrc vertex does not exist")
+            return
+
+        if dest not in self.adj_list:
+            print("\ndest vertex does not exist")
+            return
+
+        visited = [False] * self.current_size
+        distance = [float('inf')] * self.current_size
+        parent = [-1] * self.current_size
+
+        distance[src] = 0
+        pq = PriorityQueue()
+        pq.enqueue(src, 0, None)
+
+        while not pq.is_empty():
+            node = pq.dequeue()
+            u = node.vertex
+
+            if visited[u]:
+                continue
+
+            visited[u] = True
+
+            if dest is not None and u == dest:
+                break
+
+            for edge in self.adj_list[u]:
+                v = edge.vertex
+                cost = edge.cost
+
+                if not visited[v] and distance[u] + cost < distance[v]:
+                    distance[v] = distance[u] + cost
+                    parent[v] = u
+                    pq.enqueue(v, distance[v], u)
+
+        if dest is not None:
+            if distance[dest] == float('inf'):
+                print(f"\nNo Path from {src} to {dest}")
+                return
+            path = []
+            curr = dest
+            while curr != -1:
+                path.append(curr)
+                curr = parent[curr]
+            path.reverse()
+            # print(path)
+            print(f"Shortest path from {src} to {dest}: {' -> '.join(map(str, path))}")
+            print(f"Total cost: {distance[dest]}")
+        else:
+            print(f"Shortest distances from node {src}:")
+            for i in range(self.current_size):
+                print(f"to {i}: {distance[i]}")
+
+        # print(f"Shortest path from {src} to {dest} not implemented yet.")
 
     def display_graph(self):
         if self.current_size == 0:

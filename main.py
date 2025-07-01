@@ -106,13 +106,10 @@ def main():
             if g.current_size < 2:
                 print("\nAdd Vertex first!")
                 continue
-            try:
-                src = int(input("Source vertex: "))
-                dest = int(input("Destination vertex: "))
-                g.shortest_path(src, dest)
-            except ValueError:
-                print("Invalid input.")
 
+            src = int(input("Source vertex: "))
+            dest = int(input("Destination vertex: "))
+            g.shortest_path(src, dest)
 
         elif command == '5':
             g.display_graph()
