@@ -43,7 +43,8 @@ def main():
               "\n[2]: Add Edge"
               "\n[3]: Print"
               "\n[4]: Shortest Path"
-              "\n[5]: Display Graph")
+              "\n[5]: Display Graph"
+              "\n[6]: MST")
 
         command = input("--> ")
 
@@ -117,6 +118,9 @@ def main():
             g.display_graph()
 
         elif command == '6':
+            g.mst_prim()
+
+        elif command == '7':
             x = int(input("enter a vertex: "))
             if x in g.adj_list:
                 print(get_neighbours(g,x))
