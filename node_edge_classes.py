@@ -73,43 +73,57 @@ class Graph:
             return
 
         visited = [False] * self.current_size
-        mst_edge = []
+        all_components = []
         total_cost = 0
-
-        pq = PriorityQueue()
-
         start_vertex = 0
-        visited[start_vertex] = True
 
-        for edge in self.adj_list[start_vertex]:
-            pq.enqueue(edge.vertex, edge.cost, start_vertex)
-
-        while not pq.is_empty() and len(mst_edge) < self.current_size - 1:
-            node = pq.dequeue()
-            u = node.parent
-            v = node.vertex
-            cost = node.weight
-
-            if visited[v]:
+        for start_vertex in range(self.current_size):
+            if visited[start_vertex]:
                 continue
 
-            visited[v] = True
-            mst_edge.append((u, v, cost))
-            total_cost += cost
+            pq = PriorityQueue()
+            component_edge = []
+            component_cost = 0
 
-            for edge in self.adj_list[v]:
-                if not visited[edge.vertex]:
-                    pq.enqueue(edge.vertex, edge.cost, v)
+            visited[start_vertex] = True
 
-        if len(mst_edge) != self.current_size - 1:
-            print("\nGraph is Not Connected")
-            return
+            for edge in self.adj_list[start_vertex]:
+                pq.enqueue(edge.vertex, edge.cost, start_vertex)
 
-        print("\nMST Edges:")
-        for u, v, c in mst_edge:
-            print(f"{u} -- {v} (cost: {c})")
+            while not pq.is_empty():
+                node = pq.dequeue()
+                u = node.parent
+                v = node.vertex
+                cost = node.weight
 
-        print(f"\nTotal cost of MST: {total_cost}")
+                if visited[v]:
+                    continue
+
+                visited[v] = True
+                component_edge.append((u, v, cost))
+                component_cost += cost
+
+                for edge in self.adj_list[v]:
+                    if not visited[edge.vertex]:
+                      pq.enqueue(edge.vertex, edge.cost, v)
+
+            all_components.append((component_edge, component_cost))
+            total_cost += component_cost
+
+        print(all_components)
+        component_num = 1
+        # all_component: [ ([(0, 3, 4), (3, 4, 6)], 10), ([(1, 5, 2), (5, 2, 5)], 7) ]
+        for component in all_components:
+            # component: ( [(0, 3, 4), (3, 4, 6)], 10)
+            edges, cost = component
+            # edges: [ (0, 3, 4), (3, 4, 6) ]  , cost: 10
+
+            print(f"\nComponent {component_num} MST:")
+            for u, v, c in edges:
+                print(f"{u} -- {v} (cost: {c})")
+
+            print(f"Total cost of component {component_num}: {cost}")
+            component_num += 1
 
 
     def shortest_path(self, src, dest):
