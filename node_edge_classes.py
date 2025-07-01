@@ -36,7 +36,8 @@ class Graph:
         self.adj_list[u].append(Node(v, cost, capacity, start_time, end_time))
         self.adj_list[v].append(Node(u, cost, capacity, start_time, end_time))
 
-        self.G.add_edge(f"{u}", f"{v}", weight = cost, capacity = capacity,start_time = start_time, end_time = end_time)
+        self.G.add_edge(f"{u}", f"{v}", weight = cost, capacity = capacity,
+                        start_time = start_time, end_time = end_time)
 
 
     def display_vertices(self):
@@ -66,6 +67,40 @@ class Graph:
 
             print("")
 
+    def display_mst_edges(self, mst_edges):
+
+        pos = graphviz_layout(self.G, prog='sfdp')
+        plt.figure(figsize=(14, 12))
+
+        edge_colors = []
+        for u, v in self.G.edges:
+            if (u, v) in mst_edges or (v, u) in mst_edges:
+                edge_colors.append('red')
+            else:
+                edge_colors.append('gray')
+
+        plt.figure(figsize=(10, 8))
+        nx.draw(
+            self.G, pos,
+            with_labels=True,
+            node_color='skyblue',
+            node_size=900,
+            font_size=14,
+            edge_color=edge_colors,
+            width=2,
+        )
+
+        edge_labels = nx.get_edge_attributes(self.G, 'weight')
+        nx.draw_networkx_edge_labels(
+            self.G, pos,
+            edge_labels=edge_labels,
+            font_size=12,
+            label_pos=0.5,
+            rotate=False
+        )
+
+        plt.title("MST Result")
+        plt.show()
 
     def mst_prim(self):
         if self.current_size == 0:
@@ -75,7 +110,6 @@ class Graph:
         visited = [False] * self.current_size
         all_components = []
         total_cost = 0
-        start_vertex = 0
 
         for start_vertex in range(self.current_size):
             if visited[start_vertex]:
@@ -110,7 +144,9 @@ class Graph:
             all_components.append((component_edge, component_cost))
             total_cost += component_cost
 
-        print(all_components)
+        # print(all_components)
+
+        mst_edges = set()
         component_num = 1
         # all_component: [ ([(0, 3, 4), (3, 4, 6)], 10), ([(1, 5, 2), (5, 2, 5)], 7) ]
         for component in all_components:
@@ -121,9 +157,13 @@ class Graph:
             print(f"\nComponent {component_num} MST:")
             for u, v, c in edges:
                 print(f"{u} -- {v} (cost: {c})")
+                mst_edges.add((str(min(u, v)), str(max(u, v))))
 
             print(f"Total cost of component {component_num}: {cost}")
             component_num += 1
+
+        print(mst_edges)
+        self.display_mst_edges(mst_edges)
 
 
     def shortest_path(self, src, dest):
