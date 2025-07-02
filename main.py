@@ -1,4 +1,5 @@
 from node_edge_classes import Graph
+from passenger_class import *
 from collections import deque
 import copy
 
@@ -44,7 +45,9 @@ def main():
               "\n[3]: Print"
               "\n[4]: Shortest Path"
               "\n[5]: Display Graph"
-              "\n[6]: MST")
+              "\n[6]: MST"
+              "\n[7]: Release The Capacity"
+              "\n[8]: Passenger List")
 
         command = input("--> ")
 
@@ -77,7 +80,7 @@ def main():
                     continue
 
                 try:
-                    cost, start_time, end_time, capacity = map(int, input("cost, Start Time, End Time, Capacity: ").split())
+                    cost, capacity, start_time, end_time = map(int, input("cost, Capacity, Start Time, End Time: ").split())
                 except ValueError:
                     print("\nINVALID !, Should Enter 4 Number")
                     continue
@@ -106,10 +109,20 @@ def main():
             if g.current_size < 2:
                 print("\nAdd Vertex first!")
                 continue
+            try:
+                src = int(input("Source vertex: "))
+                dest = int(input("Destination vertex: "))
 
-            src = int(input("Source vertex: "))
-            dest = int(input("Destination vertex: "))
-            g.shortest_path(src, dest)
+                shortest_path_edges = g.shortest_path(src, dest)
+
+                cmd = input("Wanna Reserve The Route? [y/n]: ")
+
+                if cmd == "y" or cmd.lower() == "yes":
+                    name = input("\nEnter Name: ")
+                    reserve_route(g, name, shortest_path_edges)
+
+            except ValueError:
+                print("\nInvalid Input")
 
         elif command == '5':
             g.display_graph()
@@ -118,11 +131,11 @@ def main():
             g.mst_prim()
 
         elif command == '7':
-            x = int(input("enter a vertex: "))
-            if x in g.adj_list:
-                print(get_neighbours(g,x))
-            else:
-                print("the vertex does not exists")
+            name = input("Passenger Name:")
+            release_route_capacity(g, name)
+
+        elif command == '8':
+            g.display_passengers()
 
         else:
             print("\nInvalid choice!")

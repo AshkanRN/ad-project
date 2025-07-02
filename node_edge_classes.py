@@ -19,8 +19,10 @@ class Node:
 class Graph:
     def __init__(self):
         self.adj_list = {}
+        self.passenger_info = {}
         self.current_size = 0
         self.G = nx.Graph()
+        self.edges = set()
 
     def add_vertex(self):
         self.adj_list[self.current_size] = []
@@ -29,15 +31,17 @@ class Graph:
         self.current_size += 1
 
     def add_edge(self, u, v, cost, capacity, start_time, end_time):
-
-        self.adj_list[u] = [edge for edge in self.adj_list[u] if edge.vertex != v]
-        self.adj_list[v] = [edge for edge in self.adj_list[v] if edge.vertex != u]
+        if u in self.adj_list and v in self.adj_list:
+            self.adj_list[u] = [edge for edge in self.adj_list[u] if edge.vertex != v]
+            self.adj_list[v] = [edge for edge in self.adj_list[v] if edge.vertex != u]
 
         self.adj_list[u].append(Node(v, cost, capacity, start_time, end_time))
         self.adj_list[v].append(Node(u, cost, capacity, start_time, end_time))
 
-        self.G.add_edge(u, v, weight = cost, capacity = capacity,
+        self.G.add_edge(min(u, v), max(u, v), weight = cost, capacity = capacity,
                         start_time = start_time, end_time = end_time)
+
+        self.edges.add((min(u, v), max(u, v), cost, capacity, start_time, end_time))
 
 
     def display_vertices(self):
@@ -59,13 +63,23 @@ class Graph:
             print(f"V{u} :", end=" ")
 
             for edge in self.adj_list[u]:
-                if i == len(self.adj_list[u]) -1 :
+                if i == len(self.adj_list[u]) - 1 :
                     print(edge, end=" ")
                 else:
                     print(edge, end=" -> ")
                 i += 1
 
             print("")
+
+
+    def display_passengers(self):
+        if not self.passenger_info:
+            print("\nNO Passenger Yet.")
+            return
+
+        # print(self.passenger_info)
+        for name,edge in self.passenger_info.items():
+            print(f"{name}: {edge} ")
 
     def display_mst_edges(self, mst_edges):
 
@@ -157,7 +171,7 @@ class Graph:
             print(f"\nComponent {component_num} MST:")
             for u, v, c in edges:
                 print(f"{u} -- {v} (cost: {c})")
-                mst_edges.add((str(min(u, v)), str(max(u, v))))
+                mst_edges.add((min(u, v), max(u, v)))
 
             print(f"Total cost of component {component_num}: {cost}")
             component_num += 1
@@ -208,21 +222,30 @@ class Graph:
             if distance[dest] == float('inf'):
                 print(f"\nNo Path from {src} to {dest}")
                 return
+
             path = []
             curr = dest
+            shortest_path_edges = []
+
             while curr != -1:
                 path.append(curr)
                 curr = parent[curr]
+
             path.reverse()
-            # print(path)
+
+            for i in range(len(path)-1):
+                shortest_path_edges.append((min(path[i], path[i+1]), max(path[i], path[i+1])))
+            # print("\npath: ",path)
+            print("edges: ",shortest_path_edges)
             print(f"Shortest path from {src} to {dest}: {' -> '.join(map(str, path))}")
             print(f"Total cost: {distance[dest]}")
+            return shortest_path_edges
         else:
             print(f"Shortest distances from node {src}:")
             for i in range(self.current_size):
                 print(f"to {i}: {distance[i]}")
+            return None
 
-        # print(f"Shortest path from {src} to {dest} not implemented yet.")
 
     def display_graph(self):
         if self.current_size == 0:
@@ -243,7 +266,11 @@ class Graph:
             width=2
         )
 
-        edge_labels = nx.get_edge_attributes(self.G, 'weight')
+        # edge_labels = nx.get_edge_attributes(self.G, 'weight')
+        edge_labels = {
+            (u, v): f"{d['weight']}, {d['capacity']}"
+            for u, v, d in self.G.edges(data=True)
+        }
         nx.draw_networkx_edge_labels(
             self.G, pos,
             edge_labels=edge_labels,
