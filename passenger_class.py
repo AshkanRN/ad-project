@@ -121,7 +121,10 @@ def passenger_queue_process(graph, passenger_queue):
 
 def decrease_capacity(graph, u, v, networkx_g):
 
-    networkx_g[u][v]['capacity'] -= 1
+    if networkx_g[u][v]['capacity'] > 0:
+        networkx_g[u][v]['capacity'] -= 1
+
+    networkx_g[u][v]['usage'] += 1
 
     for edge in graph.adj_list[v]:
         if edge.vertex == u:
@@ -135,7 +138,12 @@ def decrease_capacity(graph, u, v, networkx_g):
             break
 
 def increase_capacity(graph, u, v, networkx_g):
+
     networkx_g[u][v]['capacity'] += 1
+
+    if networkx_g[u][v]['usage'] > 0:
+        networkx_g[u][v]['usage'] -= 1
+
     for edge in graph.adj_list[v]:
         if edge.vertex == u:
             if edge.capacity >= 0:

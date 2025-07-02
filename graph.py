@@ -47,6 +47,9 @@ class Graph:
         self.G.add_edge(min(u, v), max(u, v), weight = cost, capacity = capacity,
                         start_time = start_time, end_time = end_time)
 
+        if 'usage' not in self.G[u][v]:
+            self.G[u][v]['usage'] = 0
+
         # self.edges.add((min(u, v), max(u, v), cost, capacity, start_time, end_time))
 
 
@@ -265,6 +268,16 @@ class Graph:
             return
 
         pos = graphviz_layout(self.G, prog='sfdp')
+        if not self.G.edges:
+            edge_colors = '#cccccc'
+        else:
+            usage_values = [self.G[u][v].get('usage', 0) for u, v in self.G.edges]
+            max_usage = max(usage_values)
+
+            if max_usage == 0:
+                edge_colors = ['#cccccc' for i in self.G.edges]
+            else:
+                edge_colors = [plt.cm.Reds(usage / max_usage) for usage in usage_values]
 
         plt.figure(figsize=(14, 12))
 
@@ -274,7 +287,7 @@ class Graph:
             node_color='skyblue',
             node_size=900,
             font_size=14,
-            edge_color='gray',
+            edge_color=edge_colors,
             width=2
         )
 
@@ -291,7 +304,7 @@ class Graph:
             rotate=False
         )
 
-        plt.title("Graph Display", fontsize=16)
+        plt.title("Graph heatmap", fontsize=16)
         plt.axis('off')
         plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
         plt.show()
