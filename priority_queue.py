@@ -1,4 +1,4 @@
-class QueueNode:
+class PriorityQueueNode:
     def __init__(self, vertex, weight, parent = None):
         self.vertex = vertex
         self.weight = weight
@@ -10,7 +10,6 @@ class QueueNode:
 
 class PriorityQueue:
 
-
     def __init__(self):
         self.front = None
 
@@ -18,7 +17,7 @@ class PriorityQueue:
         return self.front is None
 
     def enqueue(self, vertex, weight, parent = None):
-        new_node = QueueNode(vertex, weight, parent)
+        new_node = PriorityQueueNode(vertex, weight, parent)
 
         if self.is_empty() or self.front.weight > weight:
             new_node.next = self.front

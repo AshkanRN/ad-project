@@ -1,7 +1,11 @@
 import networkx as nx
 import matplotlib.pyplot as plt
-from priority_queue import PriorityQueue
 from networkx.drawing.nx_agraph import graphviz_layout
+
+from collections import deque
+
+from priority_queue import PriorityQueue
+from passenger_class import *
 
 
 class Node:
@@ -22,7 +26,8 @@ class Graph:
         self.passenger_info = {}
         self.current_size = 0
         self.G = nx.Graph()
-        self.edges = set()
+        self.passenger_queue = PassengerQueue()
+        # self.edges = set()
 
     def add_vertex(self):
         self.adj_list[self.current_size] = []
@@ -31,7 +36,8 @@ class Graph:
         self.current_size += 1
 
     def add_edge(self, u, v, cost, capacity, start_time, end_time):
-        if u in self.adj_list and v in self.adj_list:
+
+        if any(edge.vertex == v for edge in self.adj_list[u]):
             self.adj_list[u] = [edge for edge in self.adj_list[u] if edge.vertex != v]
             self.adj_list[v] = [edge for edge in self.adj_list[v] if edge.vertex != u]
 
@@ -41,7 +47,7 @@ class Graph:
         self.G.add_edge(min(u, v), max(u, v), weight = cost, capacity = capacity,
                         start_time = start_time, end_time = end_time)
 
-        self.edges.add((min(u, v), max(u, v), cost, capacity, start_time, end_time))
+        # self.edges.add((min(u, v), max(u, v), cost, capacity, start_time, end_time))
 
 
     def display_vertices(self):
@@ -183,11 +189,11 @@ class Graph:
     def shortest_path(self, src, dest=None):
         if src not in self.adj_list:
             print("\nsrc vertex does not exist")
-            return
+            return None
 
         if dest not in self.adj_list:
             print("\ndest vertex does not exist")
-            return
+            return None
 
         visited = [False] * self.current_size
         distance = [float('inf')] * self.current_size
@@ -221,7 +227,7 @@ class Graph:
         if dest is not None:
             if distance[dest] == float('inf'):
                 print(f"\nNo Path from {src} to {dest}")
-                return
+                return None
 
             path = []
             curr = dest
@@ -283,3 +289,36 @@ class Graph:
         plt.axis('off')
         plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
         plt.show()
+
+
+
+
+
+def get_neighbours(graph, vertex):
+    neighbours = [edge.vertex for edge in graph.adj_list[vertex]]
+    return neighbours
+
+
+def check_distance_bfs(graph, radius):
+    for start in range(graph.current_size):
+        visited = [False] * graph.current_size
+        distance = [-1] * graph.current_size
+        queue = deque()
+
+        visited[start] = True
+        distance[start] = 0
+        queue.append(start)
+
+        while queue:
+            u = queue.popleft()
+            for neighbour in get_neighbours(graph, u):
+                if not visited[neighbour]:
+                    visited[neighbour] = True
+                    distance[neighbour] = distance[u] + 1
+
+                    if distance[neighbour] > radius:
+                        return False
+
+                    queue.append(neighbour)
+
+    return True

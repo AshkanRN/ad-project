@@ -1,42 +1,12 @@
-from node_edge_classes import Graph
+from graph import *
 from passenger_class import *
-from collections import deque
 import copy
-
-def get_neighbours(graph, vertex):
-    neighbours = [edge.vertex for edge in graph.adj_list[vertex]]
-    return neighbours
-
-
-def check_distance_bfs(graph, radius):
-    for start in range(graph.current_size):
-        visited = [False] * graph.current_size
-        distance = [-1] * graph.current_size
-        queue = deque()
-
-        visited[start] = True
-        distance[start] = 0
-        queue.append(start)
-
-        while queue:
-            u = queue.popleft()
-            for neighbour in get_neighbours(graph, u):
-                if not visited[neighbour]:
-                    visited[neighbour] = True
-                    distance[neighbour] = distance[u] + 1
-
-                    if distance[neighbour] > radius:
-                        return False
-
-                    queue.append(neighbour)
-
-    return True
-
 
 
 def main():
 
-    g = Graph()
+    graph = Graph()
+    passenger_queue = PassengerQueue()
 
     while True:
         print("\n[0]: Exit"
@@ -47,7 +17,9 @@ def main():
               "\n[5]: Display Graph"
               "\n[6]: MST"
               "\n[7]: Release The Capacity"
-              "\n[8]: Passenger List")
+              "\n[8]: Passenger List"
+              "\n[9]: Print Passenger Queue"
+              "\n[10]: Check first Passenger Route in Queue")
 
         command = input("--> ")
 
@@ -55,23 +27,21 @@ def main():
             break
 
         elif command == '1':
-            g.add_vertex()
+            graph.add_vertex()
 
         elif command == '2':
-            if g.current_size < 2:
+            if graph.current_size < 2:
                 print("\nAdd Vertex first !!")
                 continue
 
             try:
-                src = int(input("\nSource vertex: "))
+                src, dest = map(int, input("Source and Destination: ").split())
 
-                if src not in g.adj_list:
+                if src not in graph.adj_list:
                     print("\nSource Vertex does not exist !!!")
                     continue
 
-                dest = int(input("Destination vertex: "))
-
-                if dest not in g.adj_list:
+                if dest not in graph.adj_list:
                     print("\nDestination Vertex does not exist !!!")
                     continue
 
@@ -80,20 +50,23 @@ def main():
                     continue
 
                 try:
-                    cost, capacity, start_time, end_time = map(int, input("cost, Capacity, Start Time, End Time: ").split())
+                    cost, capacity, start_time, end_time = (
+                        map(int, input("Cost, Capacity, Start Time, End Time: ").split()))
+
                 except ValueError:
                     print("\nINVALID !, Should Enter 4 Number")
                     continue
-                if g.current_size < 5:
-                    g.add_edge(src, dest, cost, capacity, start_time, end_time)
+
+                if graph.current_size < 5:
+                    graph.add_edge(src, dest, cost, capacity, start_time, end_time)
                     print(f"\nThe Edge {src} <--> {dest} added.")
 
                 else:
-                    temp_graph = copy.deepcopy(g)
+                    temp_graph = copy.deepcopy(graph)
                     temp_graph.add_edge(src, dest, cost, capacity, start_time, end_time)
 
                     if check_distance_bfs(temp_graph, 3):
-                        g.add_edge(src, dest, cost, capacity, start_time, end_time)
+                        graph.add_edge(src, dest, cost, capacity, start_time, end_time)
                         print(f"\nThe Edge {src} <--> {dest} added.")
                     else:
                         print("\nThe Edge Can not be Added, (RADIUS LIMIT)")
@@ -102,43 +75,58 @@ def main():
                 print("\nInvalid input! Please enter numbers only.")
 
         elif command == '3':
-            g.print_graph()
+            graph.print_graph()
 
 
         elif command == '4':
-            if g.current_size < 2:
+            if graph.current_size < 2:
                 print("\nAdd Vertex first!")
                 continue
+
             try:
                 src = int(input("Source vertex: "))
                 dest = int(input("Destination vertex: "))
 
-                shortest_path_edges = g.shortest_path(src, dest)
+                shortest_path_edges = graph.shortest_path(src, dest)
 
                 cmd = input("Wanna Reserve The Route? [y/n]: ")
 
                 if cmd == "y" or cmd.lower() == "yes":
-                    name = input("\nEnter Name: ")
-                    reserve_route(g, name, shortest_path_edges)
+                    name = input("Enter Name: ")
+                    reserve_route(graph, name, shortest_path_edges, passenger_queue)
 
             except ValueError:
                 print("\nInvalid Input")
 
+
         elif command == '5':
-            g.display_graph()
+            graph.display_graph()
 
         elif command == '6':
-            g.mst_prim()
+            graph.mst_prim()
 
         elif command == '7':
+            if not graph.passenger_info:
+                print("No Passenger Yet.")
+                continue
+
             name = input("Passenger Name:")
-            release_route_capacity(g, name)
+            release_route_capacity(graph, name)
 
         elif command == '8':
-            g.display_passengers()
+            graph.display_passengers()
+
+        elif command == '9':
+            passenger_queue.print_queue()
+
+        elif command == '10':
+            passenger_queue_process(graph, passenger_queue)
+
+
 
         else:
             print("\nInvalid choice!")
+
 
 
 if __name__ == '__main__':
