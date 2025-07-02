@@ -26,7 +26,7 @@ class Graph:
         self.passenger_info = {}
         self.current_size = 0
         self.G = nx.Graph()
-        self.passenger_queue = PassengerQueue()
+        # self.passenger_queue = PassengerQueue()
         # self.edges = set()
 
     def add_vertex(self):
@@ -87,10 +87,11 @@ class Graph:
         for name,edge in self.passenger_info.items():
             print(f"{name}: {edge} ")
 
-    def display_mst_edges(self, mst_edges):
+    def highlight_edges(self, mst_edges):
 
         pos = graphviz_layout(self.G, prog='sfdp')
-        plt.figure(figsize=(14, 12))
+
+        plt.figure(figsize=(12, 10))
 
         edge_colors = []
         for u, v in self.G.edges:
@@ -99,7 +100,6 @@ class Graph:
             else:
                 edge_colors.append('gray')
 
-        plt.figure(figsize=(10, 8))
         nx.draw(
             self.G, pos,
             with_labels=True,
@@ -110,7 +110,12 @@ class Graph:
             width=2,
         )
 
-        edge_labels = nx.get_edge_attributes(self.G, 'weight')
+        # edge_labels = nx.get_edge_attributes(self.G, 'weight')
+        edge_labels = {
+            (u, v): f"{d['weight']}, {d['capacity']}"
+            for u, v, d in self.G.edges(data=True)
+        }
+
         nx.draw_networkx_edge_labels(
             self.G, pos,
             edge_labels=edge_labels,
@@ -183,7 +188,8 @@ class Graph:
             component_num += 1
 
         print(mst_edges)
-        self.display_mst_edges(mst_edges)
+
+        self.highlight_edges(mst_edges)
 
 
     def shortest_path(self, src, dest=None):
@@ -293,13 +299,12 @@ class Graph:
 
 
 
-
 def get_neighbours(graph, vertex):
     neighbours = [edge.vertex for edge in graph.adj_list[vertex]]
     return neighbours
 
 
-def check_distance_bfs(graph, radius):
+def check_radius_bfs(graph, radius):
     for start in range(graph.current_size):
         visited = [False] * graph.current_size
         distance = [-1] * graph.current_size

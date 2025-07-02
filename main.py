@@ -57,6 +57,9 @@ def main():
                     print("\nINVALID !, Should Enter 4 Number")
                     continue
 
+                if cost <= 0:
+                    print("Edge's Cost Can not be <= 0")
+
                 if graph.current_size < 5:
                     graph.add_edge(src, dest, cost, capacity, start_time, end_time)
                     print(f"\nThe Edge {src} <--> {dest} added.")
@@ -65,7 +68,7 @@ def main():
                     temp_graph = copy.deepcopy(graph)
                     temp_graph.add_edge(src, dest, cost, capacity, start_time, end_time)
 
-                    if check_distance_bfs(temp_graph, 3):
+                    if check_radius_bfs(temp_graph, 3):
                         graph.add_edge(src, dest, cost, capacity, start_time, end_time)
                         print(f"\nThe Edge {src} <--> {dest} added.")
                     else:
@@ -89,11 +92,14 @@ def main():
 
                 shortest_path_edges = graph.shortest_path(src, dest)
 
-                cmd = input("Wanna Reserve The Route? [y/n]: ")
+                if shortest_path_edges:
+                    cmd = input("Wanna Reserve The Route? [y/n]: ")
 
-                if cmd == "y" or cmd.lower() == "yes":
-                    name = input("Enter Name: ")
-                    reserve_route(graph, name, shortest_path_edges, passenger_queue)
+                    if cmd == "y" or cmd.lower() == "yes":
+                        name = input("Enter Name: ")
+                        flg = reserve_route(graph, name, shortest_path_edges, passenger_queue)
+                        if flg:
+                            graph.highlight_edges(shortest_path_edges)
 
             except ValueError:
                 print("\nInvalid Input")
@@ -120,8 +126,10 @@ def main():
             passenger_queue.print_queue()
 
         elif command == '10':
-            passenger_queue_process(graph, passenger_queue)
+            first_passenger = passenger_queue_process(graph, passenger_queue)
 
+            if first_passenger:
+                graph.highlight_edges(first_passenger.edges)
 
 
         else:

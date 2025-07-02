@@ -59,7 +59,7 @@ def reserve_route(graph, name, edge_list, passenger_queue):
 
     if name in graph.passenger_info:
         print("\nThis passenger is Already on a Route")
-        return
+        return False
 
     if not check_capacity(graph, norm_edges):
         print("\nThe route does not have enough capacity.")
@@ -68,13 +68,14 @@ def reserve_route(graph, name, edge_list, passenger_queue):
         if cmd == 'y' or cmd.lower() == "yes":
             passenger_queue.enqueue(name , norm_edges)
             print("\nEnqueued")
-        return
+        return False
 
     for u, v in norm_edges:
         decrease_capacity(graph, u, v,graph.G)
 
     graph.passenger_info[name.lower()] = norm_edges
     print("\nReserved successfully.")
+    return True
 
 
 def release_route_capacity(graph, name):
@@ -99,13 +100,13 @@ def passenger_queue_process(graph, passenger_queue):
     first_passenger = passenger_queue.get_front()
     if not first_passenger:
         print("passengers Queue is Empty")
-        return
+        return False
 
     norm_edges = [normalize_edge(u, v) for u, v in first_passenger.edges]
 
     if not check_capacity(graph, norm_edges):
         print("The Route of first passenger has not enough Capacity Yet")
-        return
+        return False
 
     else:
         for u, v in norm_edges:
@@ -114,6 +115,7 @@ def passenger_queue_process(graph, passenger_queue):
         graph.passenger_info[first_passenger.name.lower()] = norm_edges
         print("\nReserved successfully.")
         passenger_queue.dequeue()
+        return first_passenger
 
 
 
