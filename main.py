@@ -133,7 +133,7 @@ def main():
 
 
         else:
-            print("\nInvalid choice!")
+            print("\nInvalid")
 
 
 

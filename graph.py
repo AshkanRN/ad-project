@@ -268,10 +268,11 @@ class Graph:
             return
 
         pos = graphviz_layout(self.G, prog='sfdp')
+
         if not self.G.edges:
             edge_colors = '#cccccc'
         else:
-            usage_values = [self.G[u][v].get('usage', 0) for u, v in self.G.edges]
+            usage_values = [self.G[u][v]['usage'] for u, v in self.G.edges]
             max_usage = max(usage_values)
 
             if max_usage == 0:
