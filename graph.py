@@ -1,7 +1,4 @@
-
-
-from collections import deque
-
+from Queue import Queue
 from priority_queue import PriorityQueue
 from passenger import *
 
@@ -86,7 +83,8 @@ class Graph:
 
         # print(self.passenger_info)
         for name,(edges,vertices) in self.passenger_info.items():
-            print(f"{name}: {edges} , {vertices} ")
+            print(f"{name}: {edges}   ,   {vertices} ")
+
 
     def highlight_edges(self, edges):
 
@@ -96,7 +94,7 @@ class Graph:
 
         manager = plt.get_current_fig_manager()
         try:
-            manager.window.wm_geometry("+550+0")
+            manager.window.wm_geometry("+600+0")
         except AttributeError:
             pass
 
@@ -119,8 +117,7 @@ class Graph:
 
         # edge_labels = nx.get_edge_attributes(self.G, 'weight')
         edge_labels = {
-            (u, v): f"{d['weight']}, {d['capacity']}"
-            for u, v, d in self.G.edges(data=True)
+            (u, v): f"{d['weight']}, {d['capacity']}" for u, v, d in self.G.edges(data=True)
         }
 
         nx.draw_networkx_edge_labels(
@@ -133,6 +130,7 @@ class Graph:
 
         plt.title("Graph with Highlighted Edges")
         plt.show()
+
 
     def mst_prim(self):
         if self.current_size == 0:
@@ -198,12 +196,14 @@ class Graph:
             print(f"Total cost of component {component_num}: {cost}")
             component_num += 1
 
-        print(mst_edges)
+        print(f"\n{mst_edges}")
 
         self.highlight_edges(mst_edges)
 
 
-    def shortest_path(self, src, dest=None):
+    def shortest_path(self, src, dest, passenger_s_time, passenger_e_time, consider_capacity=False,
+                      consider_times=False):
+
         if src not in self.adj_list:
             print("\nsrc vertex does not exist")
             return None
@@ -235,6 +235,17 @@ class Graph:
             for edge in self.adj_list[u]:
                 v = edge.vertex
                 cost = edge.cost
+                capacity = edge.capacity
+                start_time = edge.start_time
+                end_time = edge.end_time
+
+                if consider_times:
+                    if passenger_s_time < start_time or passenger_e_time > end_time:
+                        continue
+
+                if consider_capacity:
+                    if capacity is None or capacity <= 0:
+                        continue
 
                 if not visited[v] and distance[u] + cost < distance[v]:
                     distance[v] = distance[u] + cost
@@ -243,7 +254,8 @@ class Graph:
 
         if dest is not None:
             if distance[dest] == float('inf'):
-                print(f"\nNo Path from {src} to {dest}")
+                string = "No Alternative Path" if consider_capacity else "No Path"
+                print(f"\n{string} from {src} to {dest}")
                 return None
 
             path = []
@@ -258,8 +270,10 @@ class Graph:
 
             for i in range(len(path)-1):
                 shortest_path_edges.append((min(path[i], path[i+1]), max(path[i], path[i+1])))
+            if consider_capacity:
+                print("\nAlternative:")
             # print("\npath: ",path)
-            print("edges: ",shortest_path_edges)
+            print("\nedges: ",shortest_path_edges)
             print(f"Shortest path from {src} to {dest}: {' -> '.join(map(str, path))}")
             print(f"Total cost: {distance[dest]}")
             return shortest_path_edges, path
@@ -275,7 +289,9 @@ class Graph:
             print("\nEMPTY\n")
             return
 
+        # pos: a dictionary that contains coordinate (x,y) of each vertex
         pos = graphviz_layout(self.G, prog='sfdp')
+
 
         if not self.G.edges:
             edge_colors = '#cccccc'
@@ -307,10 +323,17 @@ class Graph:
         )
 
         # edge_labels = nx.get_edge_attributes(self.G, 'weight')
+
+        # edge_labels = {
+        #     (u, v): f"{d['weight']}, {d['capacity']}"
+        #     for u, v, d in self.G.edges(data=True)
+        # }
+
         edge_labels = {
-            (u, v): f"{d['weight']}, {d['capacity']}"
+            (u, v): f"{d['weight']}, {d['capacity']}, ({d['start_time']},{d['end_time']}) , {d['usage']}"
             for u, v, d in self.G.edges(data=True)
         }
+
         nx.draw_networkx_edge_labels(
             self.G,
             pos,
@@ -337,23 +360,24 @@ def check_radius_bfs(graph, radius):
     for start in range(graph.current_size):
         visited = [False] * graph.current_size
         distance = [-1] * graph.current_size
-        queue = deque()
+        queue = Queue()
 
         visited[start] = True
         distance[start] = 0
-        queue.append(start)
+        queue.enqueue(start)
 
-        while queue:
-            u = queue.popleft()
-            for neighbour in get_neighbours(graph, u):
+        while not queue.is_empty():
+            front = queue.dequeue()
+            vertex = front.value
+            for neighbour in get_neighbours(graph, vertex):
                 if not visited[neighbour]:
                     visited[neighbour] = True
-                    distance[neighbour] = distance[u] + 1
+                    distance[neighbour] = distance[vertex] + 1
 
                     if distance[neighbour] > radius:
                         return False
 
-                    queue.append(neighbour)
+                    queue.enqueue(neighbour)
 
     return True
 

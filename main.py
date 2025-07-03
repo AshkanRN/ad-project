@@ -57,8 +57,13 @@ def main():
                     print("\nINVALID !, Should Enter 4 Number")
                     continue
 
-                if cost <= 0:
-                    print("Edge's Cost Can not be <= 0")
+                if not cost > 0:
+                    print("Edge's Cost Can not be less than/equal to zero")
+                    continue
+
+                if start_time < 0 or start_time > end_time or end_time > 23:
+                    print("Invalid Start and End Time")
+                    continue
 
                 if graph.current_size < 5:
                     graph.add_edge(src, dest, cost, capacity, start_time, end_time)
@@ -89,8 +94,17 @@ def main():
             try:
                 src = int(input("Source vertex: "))
                 dest = int(input("Destination vertex: "))
+                s_time, e_time = map(int, input("Start and End Time: ").split())
 
-                shortest_path = graph.shortest_path(src, dest)
+                if src == dest:
+                    print("Source and Destination can not be The same")
+                    continue
+
+                if s_time < 0 or s_time > e_time or e_time > 23:
+                    print("Invalid Start and End Time")
+                    continue
+
+                shortest_path = graph.shortest_path(src, dest, s_time, e_time,False, True)
                 # shortest_path is a tuple with 2 element, the first element is edges in SP and the second is Vertices
                 # Example: ([(0, 1), (0, 2)], [1, 0, 2])
                 if shortest_path:
@@ -98,9 +112,34 @@ def main():
 
                     if cmd == "y" or cmd.lower() == "yes":
                         name = input("Enter Name: ")
-                        flg = reserve_route(graph, name, shortest_path, passenger_queue)
-                        if flg:
+                        reserve_status = reserve_route(graph, name, shortest_path, passenger_queue)
+
+                        # reserve_route() return Values:
+                        # 0: Error Or "Return to Main Menu" is Selected, 1: Shortest Path Reserved,
+                        # 2: Enqueued, 3: Alternative Shortest Path
+
+                        if reserve_status == 1:
                             graph.highlight_edges(shortest_path[0])
+
+                        elif reserve_status == 3:
+                            alternative_shortest_path = graph.shortest_path(src,dest, s_time, e_time,
+                                                                            True,
+                                                                            True)
+                            if alternative_shortest_path:
+                                cmd2 = input("Wanna Reserve The Alternative Route? [y/n]: ")
+
+                                if cmd2 == "y" or cmd2.lower() == "yes":
+                                    reserve_status = reserve_route(graph, name, alternative_shortest_path, passenger_queue)
+
+                                    if reserve_status == 1:
+                                        graph.highlight_edges(alternative_shortest_path[0])
+
+                    elif cmd == "n" or cmd.lower() == "no":
+                        pass
+
+                    else:
+                        print("Invalid")
+
 
             except ValueError:
                 print("\nInvalid Input")
@@ -135,6 +174,7 @@ def main():
 
         else:
             print("\nInvalid")
+
 
 
 
