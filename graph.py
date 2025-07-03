@@ -1,11 +1,9 @@
-import networkx as nx
-import matplotlib.pyplot as plt
-from networkx.drawing.nx_agraph import graphviz_layout
+
 
 from collections import deque
 
 from priority_queue import PriorityQueue
-from passenger_class import *
+from passenger import *
 
 
 class Node:
@@ -26,8 +24,8 @@ class Graph:
         self.passenger_info = {}
         self.current_size = 0
         self.G = nx.Graph()
+        self.edges = set()
         # self.passenger_queue = PassengerQueue()
-        # self.edges = set()
 
     def add_vertex(self):
         self.adj_list[self.current_size] = []
@@ -50,7 +48,7 @@ class Graph:
         if 'usage' not in self.G[u][v]:
             self.G[u][v]['usage'] = 0
 
-        # self.edges.add((min(u, v), max(u, v), cost, capacity, start_time, end_time))
+        self.edges.add((min(u, v), max(u, v), cost, capacity, start_time, end_time))
 
 
     def display_vertices(self):
@@ -87,18 +85,24 @@ class Graph:
             return
 
         # print(self.passenger_info)
-        for name,edge in self.passenger_info.items():
-            print(f"{name}: {edge} ")
+        for name,(edges,vertices) in self.passenger_info.items():
+            print(f"{name}: {edges} , {vertices} ")
 
-    def highlight_edges(self, mst_edges):
+    def highlight_edges(self, edges):
 
         pos = graphviz_layout(self.G, prog='sfdp')
 
         plt.figure(figsize=(12, 10))
 
+        manager = plt.get_current_fig_manager()
+        try:
+            manager.window.wm_geometry("+550+0")
+        except AttributeError:
+            pass
+
         edge_colors = []
         for u, v in self.G.edges:
-            if (u, v) in mst_edges or (v, u) in mst_edges:
+            if (u, v) in edges or (v, u) in edges:
                 edge_colors.append('red')
             else:
                 edge_colors.append('gray')
@@ -127,12 +131,16 @@ class Graph:
             rotate=False
         )
 
-        plt.title("MST Result")
+        plt.title("Graph with Highlighted Edges")
         plt.show()
 
     def mst_prim(self):
         if self.current_size == 0:
             print("Graph is Empty")
+            return
+
+        if not self.edges:
+            print("There is no Edge Yet")
             return
 
         visited = [False] * self.current_size
@@ -254,7 +262,7 @@ class Graph:
             print("edges: ",shortest_path_edges)
             print(f"Shortest path from {src} to {dest}: {' -> '.join(map(str, path))}")
             print(f"Total cost: {distance[dest]}")
-            return shortest_path_edges
+            return shortest_path_edges, path
         else:
             print(f"Shortest distances from node {src}:")
             for i in range(self.current_size):
@@ -272,15 +280,21 @@ class Graph:
         if not self.G.edges:
             edge_colors = '#cccccc'
         else:
-            usage_values = [self.G[u][v]['usage'] for u, v in self.G.edges]
+            usage_values = [self.G[u][v].get('usage', 0) for u, v in self.G.edges]
             max_usage = max(usage_values)
 
             if max_usage == 0:
-                edge_colors = ['#cccccc' for i in self.G.edges]
+                edge_colors = ['#cccccc' for _ in self.G.edges]
             else:
                 edge_colors = [plt.cm.Reds(usage / max_usage) for usage in usage_values]
 
         plt.figure(figsize=(14, 12))
+
+        manager = plt.get_current_fig_manager()
+        try:
+            manager.window.wm_geometry("+550+0")
+        except AttributeError:
+            pass
 
         nx.draw(
             self.G, pos,
@@ -298,7 +312,8 @@ class Graph:
             for u, v, d in self.G.edges(data=True)
         }
         nx.draw_networkx_edge_labels(
-            self.G, pos,
+            self.G,
+            pos,
             edge_labels=edge_labels,
             font_size=12,
             label_pos=0.5,
@@ -341,3 +356,5 @@ def check_radius_bfs(graph, radius):
                     queue.append(neighbour)
 
     return True
+
+

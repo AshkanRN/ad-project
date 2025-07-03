@@ -1,18 +1,20 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+import numpy as np
+
 from matplotlib import animation
 from networkx.drawing.nx_agraph import graphviz_layout
-import numpy as np
 
 
 class PassengerQueueNode:
-    def __init__(self, name, edges):
+    def __init__(self, name, edges,vertices):
         self.name = name
         self.edges = edges
+        self.vertices = vertices
         self.next = None
 
     def __str__(self):
-        return f"{self.name}: {self.edges}"
+        return f"{self.name}: {self.edges} , {self.vertices}"
 
 class PassengerQueue:
     def __init__(self):
@@ -22,8 +24,8 @@ class PassengerQueue:
     def is_empty(self):
         return self.front is None
 
-    def enqueue(self, name, edges):
-        new_node = PassengerQueueNode(name, edges)
+    def enqueue(self, name, edges, vertices):
+        new_node = PassengerQueueNode(name, edges, vertices)
 
         if self.is_empty():
             self.rear = self.front = new_node
@@ -61,10 +63,11 @@ class PassengerQueue:
 
 
 
-def reserve_route(graph, name, edge_list, passenger_queue):
-    norm_edges = [normalize_edge(u, v) for u, v in edge_list]
+def reserve_route(graph, name, edges_vertices, passenger_queue):
+    # edges_vertices is a tuple with 2 element, the first element is edges in SP and the second is Vertices
+    norm_edges = [normalize_edge(u, v) for u, v in edges_vertices[0]]
 
-    if name in graph.passenger_info:
+    if name.lower() in graph.passenger_info:
         print("\nThis passenger is Already on a Route")
         return False
 
@@ -73,16 +76,176 @@ def reserve_route(graph, name, edge_list, passenger_queue):
 
         cmd = input("Wanna Enter the Queue Route? [y/n]: ")
         if cmd == 'y' or cmd.lower() == "yes":
-            passenger_queue.enqueue(name , norm_edges)
+            passenger_queue.enqueue(name , norm_edges, edges_vertices[1])
             print("\nEnqueued")
         return False
 
     for u, v in norm_edges:
         decrease_capacity(graph, u, v,graph.G)
 
-    graph.passenger_info[name.lower()] = norm_edges
+    graph.passenger_info[name.lower()] = (norm_edges,edges_vertices[1])
+    # passenger_info is a dictionary, it's value is a tuple like edge_vertices
     print("\nReserved successfully.")
     return True
+
+
+
+
+
+def animate_edge_traversal(g, vertex_list, steps_per_edge=10, interval=200):
+    # ساخت موقعیت گره‌ها
+    plt.ioff()
+    pos = graphviz_layout(g, prog='sfdp')  # یا هر layout دلخواه
+    fig, ax = plt.subplots(figsize=(12, 10))
+
+    manager = plt.get_current_fig_manager()
+    try:
+        manager.window.wm_geometry("+500+100")  # X=500px, Y=100px
+    except AttributeError:
+        pass
+
+    edge_list = [(vertex_list[i], vertex_list[i+1]) for i in range(len(vertex_list) - 1 )]
+
+    # ایجاد نقاط مسیر: بین هر جفت رأس (u, v)، steps_per_edge نقطه
+    path_points = []
+    for u, v in edge_list:
+        x_vals = np.linspace(pos[u][0], pos[v][0], steps_per_edge)
+        y_vals = np.linspace(pos[u][1], pos[v][1], steps_per_edge)
+        points = list(zip(x_vals, y_vals))
+        path_points.extend(points)
+
+    # تابع آپدیت فریم‌ها
+    def update(i):
+        ax.clear()
+
+        # رنگ پیش‌فرض همه گره‌ها خاکستری
+        node_colors = []
+        for node in g.nodes():
+            if node == vertex_list[0]:
+                node_colors.append('lightskyblue')  # رنگ شروع
+            elif node == vertex_list[-1]:
+                node_colors.append('lightgreen')  # رنگ پایان
+            else:
+                node_colors.append('lightgray')
+
+        nx.draw(
+            g,
+            pos,
+            with_labels=True,
+            node_color=node_colors,
+            edge_color='gray',
+            ax=ax
+        )
+
+        # نقطه جاری که در مسیر حرکت می‌کنه
+        if i < len(path_points):
+            x, y = path_points[i]
+            ax.plot(x, y, 'ro', markersize=12)
+
+        # مسیر طی‌شده تا اینجا
+        if i > 0:
+            ax.plot(*zip(*path_points[:i + 1]), color='red', linewidth=2)
+
+    # ایجاد انیمیشن
+    ani = animation.FuncAnimation(
+        fig, update, frames=len(path_points), interval=interval, repeat=False)
+
+    plt.show()
+
+
+def release_route_capacity(graph, name):
+    if not graph.passenger_info:
+        print("NO Passenger Yet.")
+        return
+
+    name = name.lower()
+    if name not in graph.passenger_info:
+        print("\nPassenger not found.")
+        return
+
+    vertices_path = graph.passenger_info[name][1]
+    animate_edge_traversal(graph.G, vertices_path,25,10)
+
+    for u, v in graph.passenger_info[name][0]:
+        increase_capacity(graph, u, v, graph.G)
+
+    del graph.passenger_info[name]
+    print("\nCapacity released.")
+
+
+
+def passenger_queue_process(graph, passenger_queue):
+
+    first_passenger = passenger_queue.get_front()
+    if not first_passenger:
+        print("passengers Queue is Empty")
+        return False
+
+    norm_edges = [normalize_edge(u, v) for u, v in first_passenger.edges]
+
+    if not check_capacity(graph, norm_edges):
+        print("The Route of first passenger has not enough Capacity Yet")
+        return False
+
+    else:
+        for u, v in norm_edges:
+            decrease_capacity(graph, u, v,graph.G)
+
+        graph.passenger_info[first_passenger.name.lower()] = (norm_edges, first_passenger.vertices)
+        print("\nReserved successfully.")
+        passenger_queue.dequeue()
+        return first_passenger
+
+
+
+def decrease_capacity(graph, u, v, networkx_g):
+
+    if networkx_g[u][v]['capacity'] > 0:
+        networkx_g[u][v]['capacity'] -= 1
+
+    networkx_g[u][v]['usage'] += 1
+
+    for edge in graph.adj_list[v]:
+        if edge.vertex == u:
+            if edge.capacity > 0:
+                edge.capacity -= 1
+            break
+    for edge in graph.adj_list[u]:
+        if edge.vertex == v:
+            if edge.capacity > 0:
+                edge.capacity -= 1
+            break
+
+def increase_capacity(graph, u, v, networkx_g):
+
+    networkx_g[u][v]['capacity'] += 1
+
+    if networkx_g[u][v]['usage'] > 0:
+        networkx_g[u][v]['usage'] -= 1
+
+    for edge in graph.adj_list[v]:
+        if edge.vertex == u:
+            if edge.capacity >= 0:
+                edge.capacity += 1
+            break
+    for edge in graph.adj_list[u]:
+        if edge.vertex == v:
+            if edge.capacity >= 0:
+                edge.capacity += 1
+            break
+
+
+def check_capacity(graph, passenger_edge):
+    for u, v in passenger_edge:
+        for edge in graph.adj_list[u]:
+            if edge.vertex == v:
+                if edge.capacity <= 0:
+                    return False
+    return True
+
+def normalize_edge(u, v):
+    return min(u, v), max(u, v)
+
 
 
 
@@ -217,135 +380,3 @@ def reserve_route(graph, name, edge_list, passenger_queue):
 #     plt.title("Passenger Route Animation")
 #     plt.axis('off')
 #     plt.show()
-
-def animate_edge_traversal(G, vertex_list, steps_per_edge=10, interval=200):
-    # ساخت موقعیت گره‌ها
-    pos = graphviz_layout(G, prog='sfdp')  # یا هر layout دلخواه
-    fig, ax = plt.subplots(figsize=(10, 8))
-
-
-    edge_list = [(vertex_list[i], vertex_list[i+1]) for i in range(len(vertex_list) - 1 )]
-
-    # ایجاد نقاط مسیر: بین هر جفت رأس (u, v)، steps_per_edge نقطه
-    path_points = []
-    for u, v in edge_list:
-        x_vals = np.linspace(pos[u][0], pos[v][0], steps_per_edge)
-        y_vals = np.linspace(pos[u][1], pos[v][1], steps_per_edge)
-        points = list(zip(x_vals, y_vals))
-        path_points.extend(points)
-
-    # تابع آپدیت فریم‌ها
-    def update(i):
-        ax.clear()
-        # گراف زمینه
-        nx.draw(G, pos, with_labels=True, node_color='lightgray', edge_color='gray', ax=ax)
-
-        # نقطه جاری که در مسیر حرکت می‌کنه
-        if i < len(path_points):
-            x, y = path_points[i]
-            ax.plot(x, y, 'ro', markersize=12)
-
-        # نمایش مسیر طی‌شده تا اینجا (اختیاری)
-        if i > 0:
-            ax.plot(*zip(*path_points[:i + 1]), color='red', linewidth=2)
-
-    # ایجاد انیمیشن
-    ani = animation.FuncAnimation(
-        fig, update, frames=len(path_points), interval=interval, repeat=False)
-
-    plt.show()
-
-
-def release_route_capacity(graph, name):
-    if not graph.passenger_info:
-        print("NO Passenger Yet.")
-        return
-
-    name = name.lower()
-    if name not in graph.passenger_info:
-        print("\nPassenger not found.")
-        return
-
-    edges = graph.passenger_info[name]
-    # animate_path_on_graph(graph.G,edges,'sfdp',800)
-    # animate_path_on_graph(graph.G,edges,'sfdp,800')
-    animate_edge_traversal(graph.G, edges,10,200)
-
-    for u, v in graph.passenger_info[name]:
-        increase_capacity(graph, u, v, graph.G)
-
-    del graph.passenger_info[name]
-    print("\nCapacity released.")
-
-
-def passenger_queue_process(graph, passenger_queue):
-
-    first_passenger = passenger_queue.get_front()
-    if not first_passenger:
-        print("passengers Queue is Empty")
-        return False
-
-    norm_edges = [normalize_edge(u, v) for u, v in first_passenger.edges]
-
-    if not check_capacity(graph, norm_edges):
-        print("The Route of first passenger has not enough Capacity Yet")
-        return False
-
-    else:
-        for u, v in norm_edges:
-            decrease_capacity(graph, u, v,graph.G)
-
-        graph.passenger_info[first_passenger.name.lower()] = norm_edges
-        print("\nReserved successfully.")
-        passenger_queue.dequeue()
-        return first_passenger
-
-
-
-def decrease_capacity(graph, u, v, networkx_g):
-
-    if networkx_g[u][v]['capacity'] > 0:
-        networkx_g[u][v]['capacity'] -= 1
-
-    networkx_g[u][v]['usage'] += 1
-
-    for edge in graph.adj_list[v]:
-        if edge.vertex == u:
-            if edge.capacity > 0:
-                edge.capacity -= 1
-            break
-    for edge in graph.adj_list[u]:
-        if edge.vertex == v:
-            if edge.capacity > 0:
-                edge.capacity -= 1
-            break
-
-def increase_capacity(graph, u, v, networkx_g):
-
-    networkx_g[u][v]['capacity'] += 1
-
-    if networkx_g[u][v]['usage'] > 0:
-        networkx_g[u][v]['usage'] -= 1
-
-    for edge in graph.adj_list[v]:
-        if edge.vertex == u:
-            if edge.capacity >= 0:
-                edge.capacity += 1
-            break
-    for edge in graph.adj_list[u]:
-        if edge.vertex == v:
-            if edge.capacity >= 0:
-                edge.capacity += 1
-            break
-
-
-def check_capacity(graph, passenger_edge):
-    for u, v in passenger_edge:
-        for edge in graph.adj_list[u]:
-            if edge.vertex == v:
-                if edge.capacity <= 0:
-                    return False
-    return True
-
-def normalize_edge(u, v):
-    return min(u, v), max(u, v)

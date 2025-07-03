@@ -1,5 +1,5 @@
 from graph import *
-from passenger_class import *
+from passenger import *
 import copy
 
 
@@ -90,16 +90,17 @@ def main():
                 src = int(input("Source vertex: "))
                 dest = int(input("Destination vertex: "))
 
-                shortest_path_edges = graph.shortest_path(src, dest)
-
-                if shortest_path_edges:
+                shortest_path = graph.shortest_path(src, dest)
+                # shortest_path is a tuple with 2 element, the first element is edges in SP and the second is Vertices
+                # Example: ([(0, 1), (0, 2)], [1, 0, 2])
+                if shortest_path:
                     cmd = input("Wanna Reserve The Route? [y/n]: ")
 
                     if cmd == "y" or cmd.lower() == "yes":
                         name = input("Enter Name: ")
-                        flg = reserve_route(graph, name, shortest_path_edges, passenger_queue)
+                        flg = reserve_route(graph, name, shortest_path, passenger_queue)
                         if flg:
-                            graph.highlight_edges(shortest_path_edges)
+                            graph.highlight_edges(shortest_path[0])
 
             except ValueError:
                 print("\nInvalid Input")
