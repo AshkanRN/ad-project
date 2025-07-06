@@ -3,6 +3,7 @@ from priority_queue import PriorityQueue
 from passenger import *
 
 
+
 class Node:
     def __init__(self, vertex, cost, capacity, start_time, end_time):
         self.vertex = vertex
@@ -39,6 +40,7 @@ class Graph:
         self.adj_list[u].append(Node(v, cost, capacity, start_time, end_time))
         self.adj_list[v].append(Node(u, cost, capacity, start_time, end_time))
 
+        # for avoid to create duplicate edge: min(u, v), max(u, v)
         self.G.add_edge(min(u, v), max(u, v), weight = cost, capacity = capacity,
                         start_time = start_time, end_time = end_time)
 
@@ -202,7 +204,7 @@ class Graph:
 
 
     def shortest_path(self, src, dest, passenger_s_time, passenger_e_time, consider_capacity=False,
-                      consider_times=False):
+                      consider_times=False, tsp_mode=False):
 
         if src not in self.adj_list:
             print("\nsrc vertex does not exist")
@@ -254,9 +256,13 @@ class Graph:
 
         if dest is not None:
             if distance[dest] == float('inf'):
-                string = "No Alternative Path" if consider_capacity else "No Path"
-                print(f"\n{string} from {src} to {dest}")
-                return None
+                if not tsp_mode:
+                    string = "No Alternative Path" if consider_capacity else "No Path"
+                    print(f"\n{string} from {src} to {dest}")
+                return float('inf') if tsp_mode else None
+
+            if tsp_mode:
+                return distance[dest], parent
 
             path = []
             curr = dest
@@ -278,6 +284,8 @@ class Graph:
             print(f"Total cost: {distance[dest]}")
             return shortest_path_edges, path
         else:
+            if tsp_mode:
+                return distance
             print(f"Shortest distances from node {src}:")
             for i in range(self.current_size):
                 print(f"to {i}: {distance[i]}")
@@ -382,3 +390,136 @@ def check_radius_bfs(graph, radius):
     return True
 
 
+def dijkstra(graph, src, dest = None):
+    if src not in graph.adj_list:
+        print("\nsrc vertex does not exist")
+        return None
+
+    if dest is not None and dest not in graph.adj_list:
+        print("\ndest vertex does not exist")
+        return None
+
+    visited = [False] * graph.current_size
+    distance = [float('inf')] * graph.current_size
+    parent = [-1] * graph.current_size
+
+    distance[src] = 0
+    pq = PriorityQueue()
+    pq.enqueue(src, 0, None)
+
+    while not pq.is_empty():
+        node = pq.dequeue()
+        u = node.vertex
+
+        if visited[u]:
+            continue
+
+        visited[u] = True
+
+        if dest is not None and u == dest:
+            break
+
+        for edge in graph.adj_list[u]:
+            v = edge.vertex
+            cost = edge.cost
+
+            if not visited[v] and distance[u] + cost < distance[v]:
+                distance[v] = distance[u] + cost
+                parent[v] = u
+                pq.enqueue(v, distance[v], u)
+
+    if dest is not None:
+        return distance[dest]
+
+    return distance, parent
+
+
+
+def build_cost_matrix(graph, start, destinations):
+
+    nodes = [start] + destinations
+    n = len(nodes)
+
+    cost_matrix = [[float('inf')] * n for _ in range(n)]
+    shortest_paths = dict()
+
+    for i in range(n):
+        dist, parent = dijkstra(graph, nodes[i])
+
+        for j in range(n):
+            dest = nodes[j]
+            cost_matrix[i][j] = dist[nodes[j]]
+
+
+            path = []
+            current = dest
+            if dist[dest] != float('inf'):
+                while current != -1:
+                    path.append(current)
+                    current = parent[current]
+                path.reverse()
+            shortest_paths[(i, j)] = path
+
+
+    return cost_matrix, nodes, shortest_paths
+
+
+
+def tsp_dp(pos, visited, cost_matrix, n, memo, parent):
+    # if all nodes visited
+    if visited == (1 << n) - 1:
+        return 0
+
+    # memo is a dictionary that store (pos, visited)
+    if (pos, visited) in memo:
+        return memo[(pos, visited)]
+
+    min_cost = float('inf')
+    next_node = -1
+
+    for nxt in range(n):
+        # if nxt is not visited:
+        if (visited & (1 << nxt)) == 0:
+            cost = cost_matrix[pos][nxt] + tsp_dp(nxt, visited | (1 << nxt), cost_matrix, n, memo, parent)
+            if cost < min_cost:
+                min_cost = cost
+                next_node = nxt
+
+    memo[(pos, visited)] = min_cost
+    parent[(pos, visited)] = next_node
+    return min_cost
+
+
+def tsp_with_path(cost_matrix, shortest_paths, nodes, start_index=0):
+    n = len(cost_matrix)
+    memo = {}
+    parent = {}
+
+    # 1 << start_index : start_index visited
+    min_cost = tsp_dp(start_index, 1 << start_index, cost_matrix, n, memo, parent)
+
+    path_indices = [start_index]
+    visited = 1 << start_index
+    pos = start_index
+
+    while True:
+        nxt = parent.get((pos, visited), -1)
+        if nxt == -1:
+            break
+        path_indices.append(nxt)
+        # nxt visited
+        visited |= (1 << nxt)
+        pos = nxt
+
+    real_path = []
+    for i in range( len(path_indices) - 1):
+        u, v = path_indices[i], path_indices[i + 1]
+        segment = shortest_paths[(u, v)]
+        if i == 0:
+            real_path += segment
+        else:
+            real_path += segment[1:]
+
+    visiting_order = [ nodes[i] for i in path_indices ]
+
+    return min_cost, visiting_order, real_path

@@ -1,6 +1,6 @@
 from graph import *
 from passenger import *
-import copy
+
 
 
 def main():
@@ -18,8 +18,9 @@ def main():
               "\n[6]: MST"
               "\n[7]: Release The Capacity"
               "\n[8]: Passenger List"
-              "\n[9]: Print Passenger Queue"
-              "\n[10]: Check first Passenger Route in Queue")
+              "\n[9]: Print Passenger Queue"    
+              "\n[10]: Check Passenger Queue"
+              "\n[11]: Multi-Destination Shortest Path")
 
         command = input("--> ")
 
@@ -65,18 +66,22 @@ def main():
                     print("Invalid Start and End Time")
                     continue
 
+                graph.add_edge(src, dest, cost, capacity, start_time, end_time)
+
                 if graph.current_size < 5:
-                    graph.add_edge(src, dest, cost, capacity, start_time, end_time)
                     print(f"\nThe Edge {src} <--> {dest} added.")
 
                 else:
-                    temp_graph = copy.deepcopy(graph)
-                    temp_graph.add_edge(src, dest, cost, capacity, start_time, end_time)
-
-                    if check_radius_bfs(temp_graph, 3):
+                    if check_radius_bfs(graph, 3):
                         graph.add_edge(src, dest, cost, capacity, start_time, end_time)
+
                         print(f"\nThe Edge {src} <--> {dest} added.")
                     else:
+                        # removing the Edge
+                        graph.adj_list[src] = [edge for edge in graph.adj_list[src] if edge.vertex != dest]
+                        graph.adj_list[dest] = [edge for edge in graph.adj_list[dest] if edge.vertex != src]
+                        graph.G.remove_edge(min(src, dest), max(src, dest))
+
                         print("\nThe Edge Can not be Added, (RADIUS LIMIT)")
 
             except ValueError:
@@ -170,6 +175,32 @@ def main():
 
             if first_passenger:
                 graph.highlight_edges(first_passenger.edges)
+
+        elif command == '11':
+            if graph.current_size <= 0:
+                print("empty")
+                continue
+
+            start = int(input("Start node: "))
+            destinations = list(map(int, input("Destinations: ").split()))
+
+            cost_matrix, nodes, shortest_paths = build_cost_matrix(graph, start, destinations)
+
+            min_cost, visiting_order, real_path = tsp_with_path(cost_matrix, shortest_paths,
+                                                                nodes, start_index=0)
+
+            if min_cost == float('inf'):
+                print("\nThere is No path to visit all destinations.")
+                continue
+
+            edge_list = [(real_path[i], real_path[i + 1]) for i in range(len(real_path) - 1)]
+
+
+            print("Cost:", min_cost)
+            print("Visiting order:", visiting_order)
+            print("Path:", edge_list)
+
+            graph.highlight_edges(edge_list)
 
 
         else:

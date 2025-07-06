@@ -102,7 +102,8 @@ def reserve_route(graph, name, edges_vertices, passenger_queue):
         decrease_capacity(graph, u, v,graph.G)
 
     graph.passenger_info[name.lower()] = (norm_edges,edges_vertices[1])
-    # passenger_info is a dictionary, it's value is a tuple like edge_vertices
+    # Passenger_info is a dictionary, key is name of the passenger
+    # The value is a tuple like edge_vertices
 
     print("\nReserved successfully.")
     return 1
@@ -164,7 +165,7 @@ def animate_edge_traversal(g, vertex_list, steps_per_edge=25, interval=10):
         if i < len(path_points):
             x, y = path_points[i]
             ax.plot(x, y, 'ro', markersize=15)
-
+            # ro : red circle (o shape)
 
         if i > 0:
             traversed_points = path_points[0 : i + 1]
