@@ -30,7 +30,7 @@ The system models universities and routes as a **graph** and provides intelligen
 ---
 
 ### Core Libraries: ###
-  - [NetworkX](https://networkx.org/) – Graph representation and algorithms
+  - [NetworkX](https://networkx.org/) – Graph representation
   - [PyGraphviz](https://pygraphviz.github.io/) – Graph visualization (requires Graphviz)
   - [Matplotlib](https://matplotlib.org/) – Graph drawing and heatmaps
   - [NumPy](https://numpy.org/) – Numerical computations
@@ -58,7 +58,7 @@ This project requires **Graphviz** to be installed before installing Python depe
   - Download and install Graphviz from: https://graphviz.org/download/
   
    
-## installation
+## Getting Started
 - Clone the repository:
 ```bash
   git clone https://github.com/AshkanRN/ad-project-gu.git
