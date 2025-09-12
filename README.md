@@ -1,13 +1,15 @@
 # University Graph-Based Transport System
 
-This project is a **Python implementation** of a smart inter-university transportation and booking system.  
+This project is a **Python implementation** of a University Transport and booking system,
+**using an adjacency list graph representation.**<br>
 It was developed as a course project for **Algorithm Design**.
 
-The system models universities and routes as a **graph** and provides intelligent route planning, booking, and trip optimization using advanced algorithms.
+The system models universities and routes as a **graph** and provides intelligent route planning, booking,
+and trip optimization.
 
 ---
 
-## 🚀 Features
+## Features
 
 ### Phase 1: University Graph Construction
 - Models universities and connections as a **weighted graph**.
@@ -17,7 +19,7 @@ The system models universities and routes as a **graph** and provides intelligen
 
 ### Phase 2: Intelligent Booking System
 - Allows students to book inter-university trips.
-- Suggests **optimal paths** based on **shortest time** or **minimum cost** using **Dijkstra**.
+- Suggests **optimal paths** based on **minimum cost** using **Dijkstra**.
 - Manages seat capacity and prevents overbooking.
 - Maintains a **priority queue** for pending reservations if routes are full.
 - Includes **visualization** (graphs and heatmaps) to show real-time usage.
@@ -29,15 +31,18 @@ The system models universities and routes as a **graph** and provides intelligen
 
 ---
 
-### Core Libraries: ###
-  - [NetworkX](https://networkx.org/) – Graph representation
-  - [PyGraphviz](https://pygraphviz.github.io/) – Graph visualization (requires Graphviz)
-  - [Matplotlib](https://matplotlib.org/) – Graph drawing and heatmaps
+### Core Libraries:
+  - [NetworkX](https://networkx.org/) – for graph visualization
+  - [PyGraphviz](https://pygraphviz.github.io/) – to compute node coordinates for layout
+  - [Matplotlib](https://matplotlib.org/) – renders the final plots and heatmaps
   - [NumPy](https://numpy.org/) – Numerical computations
+  
+All graph algorithms and data structures (MST, BFS, Dijkstra, Priority Queue, TSP with DP, etc.)
+are **implemented from scratch** using an **adjacency list** representation.
 
 ---
 
-## 📋 Prerequisites
+## Prerequisites
 
 This project requires **Graphviz** to be installed before installing Python dependencies (because of `pygraphviz`).
 
