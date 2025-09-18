@@ -66,10 +66,10 @@ This project requires **Graphviz** to be installed before installing Python depe
 ## Getting Started
 - Clone the repository:
 ```bash
-  git clone https://github.com/AshkanRN/ad-project-gu.git
+  git clone https://github.com/AshkanRN/ad-project.git
 ```
 ```bash
-  cd ad-project-gu
+  cd ad-project
 ```
 
 - Install Python dependencies:
